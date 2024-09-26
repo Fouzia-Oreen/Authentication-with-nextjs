@@ -1,15 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {connect} from '@/dfConfig/dbConfig';
+import { connect } from '@/dfConfig/dbConfig';
+import { sendMail } from '@/helpers/mailer';
 import User from '@/models/userModel';
-import {NextRequest, NextResponse} from 'next/server';
-import bcryptjs from "bcryptjs"
-import {sendMail} from '@/helpers/mailer'
+import bcryptjs from "bcryptjs";
+import { NextRequest, NextResponse } from 'next/server';
 
 connect()
 export async function POST(request : NextRequest) {
     try {
         const reqBody = await request.json()
-        const {userFirstName ,userLastName, email, password} = reqBody
+        const {firstname ,lastname, email, password} = reqBody
+        console.log(reqBody);
+        
         // validation
         const user = await User.findOne({email})
         if (user) {
@@ -17,11 +19,11 @@ export async function POST(request : NextRequest) {
         }
         // hashing password
         const salt = await bcryptjs.genSalt(10);
-        const hashedPassword = await bcryptjs.hash(password  ,salt)
+        const hashedPassword = await bcryptjs.hash(password ,salt)
 
         const newUser = new User ({
-            userFirstName,
-            userLastName,
+            firstname,
+            lastname,
             email,
             password:hashedPassword
         })
