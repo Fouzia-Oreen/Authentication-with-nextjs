@@ -1,28 +1,40 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import User from "@/models/userModel";
 import nodemailer from "nodemailer"
+import bcryptjs from "bcryptjs"
 
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const sendMail = async ({email, emailType, userId} : any) => {
     try {
-        // TODO configure mail for usage
-        const transporter = nodemailer.createTransport({
-            host: "smtp.gmail.email",
-            port: 587,
-            secure: false, // true for port 465, false for other ports
+        const hashedToken = await bcryptjs.hash(userId.toString(), 10)
+        if (emailType === "VERIFY") {
+            await User.findByIdAndUpdate(userId, {verifyToken: hashedToken, verifyTokenExpiry: Date.now() + 3600000})
+        }
+        else if (emailType === "RESET") {
+            await User.findByIdAndUpdate(userId, {forgotPasswordToken: hashedToken, forgotPasswordTokenExpiry: Date.now() + 3600000})
+        }
+
+        const transport = nodemailer.createTransport({
+            host: "sandbox.smtp.mailtrap.io",
+            port: 2525,
             auth: {
-            user: "maddison53@ethereal.email",
-            pass: "jn7jnAPss4f63QBp6D",
-            },
+            user: process.env.AUTH_USER, 
+            pass: process.env.AUTH_PASS
+            }
         });
-        const mailOptions = await transporter.sendMail({
+        const mailOptions = await transport.sendMail({
             from: 'fouziaoreen.dev@gmail.com', // sender 
             to: email, //  receivers
             subject: emailType === "VERIFY" ? "Verify your email" : "Reset your password", // Subject line of email
-            // text: "Hello world?", // plain text body
-            html: "<b>Hello world?</b>", // html body or mail body
+            html: `
+            <h2>Welcome User!</h2></br> 
+            <p>Thank you for joining the site! To activate your account and start exploring, please click the verification link below.</p></br>
+            <p>Click <a href="${process.env.DOMAIN}/verifyemail?token=${hashedToken}">here</a>${emailType === "VERIFY" ? "verify your email" : "reset your password"} or copy and paste the link below in your browser.</br>${process.env.DOMAIN}/verifyemail?token=${hashedToken}</p></br>
+            Thank you for choosing Demodoo!</br>
+            <p>Best Regards</p>,
+            <p>Fouzia Oreen</p>`, // html body or mail body
           })
-         const mailResponse =  await transporter.sendMail(mailOptions) 
+         const mailResponse =  await transport.sendMail(mailOptions) 
          return mailResponse
           ;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
