@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { connect } from '@/dfConfig/dbConfig';
+import { connect } from '@/dbConfig/dbConfig';
 import User from '@/models/userModel';
-import { NextRequest, NextResponse } from 'next/server';
 import bcryptjs from "bcryptjs";
-import jwt from 'jsonwebtoken'
+import jwt from 'jsonwebtoken';
+import { NextRequest, NextResponse } from 'next/server';
 connect()
 
 export async function POST(request:NextRequest) {
@@ -23,7 +23,7 @@ export async function POST(request:NextRequest) {
         /// jwt token
         const tokenData = {
             id:user._id,
-            firstname:user.firstname,
+            username:user.username,
             email:user.email
         }
         const jwtToken = await jwt.sign({tokenData},process.env.TOKEN_SECRET!, {expiresIn : "1d"})
